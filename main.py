@@ -16,10 +16,10 @@ class Book(BaseModel):
     id:int
     title:str = Field(...,min_length=3)
     author:str = Field(...,min_length=3)
-    price:int = Field(...,gt=0)
+    price:float = Field(...,gt=0)
     description: Optional[str] = None
 
-    @field_validator("title",mode="after")
+    @field_validator("title")
     @classmethod
     def validate_title(cls, v: str) -> str:
         if not v[0].isupper():
@@ -40,7 +40,14 @@ class Book(BaseModel):
             raise ValueError("Price must be between ₹1 and ₹10,000")
         return v
 
-books: List[Book]=[]
+books: List[Book]=[
+    Book(id=1, title="Harry Potter", author="J.K. Rowling", price=499.99, description="A wizarding adventure."),
+    Book(id=2, title="The Hobbit", author="J.R.R. Tolkien", price=399.50, description="A hobbit's journey to a dragon's lair."),
+    Book(id=3, title="The Alchemist", author="Paulo Coelho", price=299.00, description="A philosophical quest for treasure."),
+    Book(id=4, title="To Kill a Mockingbird", author="Harper Lee", price=349.99, description="A classic of race and justice."),
+    Book(id=5, title="GOT", author="George Orwell", price=199.00, description="A dystopian world of surveillance."),
+    Book(id=6, title="Atomic Habits", author="James Clear", price=550.00, description="Build good habits, break bad ones.")
+]
 
 @api.post("/book")
 def createBook(book:Book):
@@ -55,9 +62,13 @@ def createBook(book:Book):
 def getbooks():
     return books
 
-@api.get("/books/{book_id}", response_model=Book)
+@api.get("/books/{book_id}")
 def get_book(book_id: int):
     for book in books:
         if book.id == book_id:
             return book
     raise HTTPException(status_code=404, detail="Book not found.")
+
+@api.get("/jsonBooks")
+def get_books_json():
+    return [book.model_dump_json() for book in books]
