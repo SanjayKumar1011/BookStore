@@ -72,3 +72,4 @@ def get_book(book_id: int):
 @api.get("/jsonBooks")
 def get_books_json():
     return [book.model_dump_json() for book in books]
+
