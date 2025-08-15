@@ -1,13 +1,13 @@
 from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel,Field, field_validator
 from typing import List,Optional
-api=FastAPI()
+app=FastAPI()
 
-@api.get("/")
+@app.get("/")
 def home():
     return "Hello world using Fast API!!"
 
-@api.get("/greet")
+@app.get("/greet")
 def Greet():
     return {"Greetings" : "Welcome to Fast Api!!!"}
 
@@ -49,7 +49,7 @@ books: List[Book]=[
     Book(id=6, title="Atomic Habits", author="James Clear", price=550.00, description="Build good habits, break bad ones.")
 ]
 
-@api.post("/book")
+@app.post("/book")
 def createBook(book:Book):
     for b in books:
         if book.id==b.id:
@@ -58,18 +58,18 @@ def createBook(book:Book):
     return book
 
 
-@api.get("/books")
+@app.get("/books")
 def getbooks():
     return books
 
-@api.get("/books/{book_id}")
+@app.get("/books/{book_id}")
 def get_book(book_id: int):
     for book in books:
         if book.id == book_id:
             return book
     raise HTTPException(status_code=404, detail="Book not found.")
 
-@api.get("/jsonBooks")
+@app.get("/jsonBooks")
 def get_books_json():
     return [book.model_dump_json() for book in books]
 
