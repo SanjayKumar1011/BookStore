@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Depends
+from fastapi import FastAPI,Depends,status,HTTPException
 from pydantic import BaseModel
 from .database import engine,get_db
 from . import models,schemas
@@ -11,7 +11,7 @@ models.Base.metadata.create_all(bind=engine)
 def ping():
     return  "Pong"
 
-@app.post('/blog')
+@app.post('/blog',status_code=status.HTTP_201_CREATED)
 def createBlog(requestBlog:schemas.Blog, db: Session= Depends(get_db)):
     blog=models.Blog(title=requestBlog.title,
          author=requestBlog.author,
@@ -20,3 +20,38 @@ def createBlog(requestBlog:schemas.Blog, db: Session= Depends(get_db)):
     db.commit()
     db.refresh(blog)
     return blog
+
+@app.get('/blog',status_code=status.HTTP_200_OK)
+def getAllBlogs(db: Session= Depends(get_db)):
+    blogs=db.query(models.Blog).all()
+    return blogs
+
+@app.get('/blog/{id}',status_code=status.HTTP_200_OK)
+def getBlogById(id:int, db: Session= Depends(get_db)):
+    blog=db.query(models.Blog).filter(models.Blog.id==id).first()
+    if not blog:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"blog with id {id} does not exists")
+    return blog
+
+@app.put('/blog/{id}')
+def updateBlogById(id:int,requestBlog:schemas.Blog,db: Session= Depends(get_db)):
+    blog=db.query(models.Blog).filter(models.Blog.id==id)
+    if not blog.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"blog with id {id} does not exists")
+    blog.update(requestBlog.model_dump())
+    db.commit()
+    db.refresh(blog)
+    return f"Successfully Updated the blog with id {id}"
+
+@app.delete('/blog/{id}')
+def deleteBlogById(id:int,db: Session= Depends(get_db)):
+    blog=db.query(models.Blog).filter(models.Blog.id==id)
+    if not blog.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"blog with id {id} does not exists")
+    blog.delete()
+    db.commit()
+    db.refresh(blog)
+    return f"Successfully deleted the blog with id {id}"
