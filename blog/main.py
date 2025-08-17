@@ -1,8 +1,9 @@
 from fastapi import FastAPI,Depends,status,HTTPException
-from pydantic import BaseModel
 from .database import engine,get_db
 from . import models,schemas
 from sqlalchemy.orm import Session
+from typing import List
+
 app=FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
@@ -21,7 +22,7 @@ def createBlog(requestBlog:schemas.Blog, db: Session= Depends(get_db)):
     db.refresh(blog)
     return blog
 
-@app.get('/blog',status_code=status.HTTP_200_OK)
+@app.get('/blog',status_code=status.HTTP_200_OK,response_model=List[schemas.ShowBlog])
 def getAllBlogs(db: Session= Depends(get_db)):
     blogs=db.query(models.Blog).all()
     return blogs
@@ -55,3 +56,19 @@ def deleteBlogById(id:int,db: Session= Depends(get_db)):
     db.commit()
     db.refresh(blog)
     return f"Successfully deleted the blog with id {id}"
+
+
+@app.post('/user',status_code=status.HTTP_201_CREATED)
+def createUser(requestBlog:schemas.User, db: Session= Depends(get_db)):
+    user=models.User(name=requestBlog.name,
+                     email=requestBlog.email,
+                     password=requestBlog.password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@app.get('/user',status_code=status.HTTP_200_OK,response_model=List[schemas.User])
+def getUser(db: Session= Depends(get_db)):
+    user=db.query(models.User).all()
+    return user
