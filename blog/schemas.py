@@ -12,8 +12,10 @@ class ShowBlog(Blog):
 class User(BaseModel):
     name:str= Field(...,min_length=3,max_length=10)
     email:str= Field(...,min_length=5,max_length=20)
-    password:str=Field(...,min_length=3,max_length=9)
+    password:str=Field(...,min_length=3,max_length=50)
 
-class ShowBlog(User):
+class ShowUser(BaseModel):
+    name:str
+    email:str
     class Config:
         from_attributes=True

@@ -3,6 +3,8 @@ from .database import engine,get_db
 from . import models,schemas
 from sqlalchemy.orm import Session
 from typing import List
+from .utils.hashing import Hash
+
 
 app=FastAPI()
 
@@ -60,15 +62,16 @@ def deleteBlogById(id:int,db: Session= Depends(get_db)):
 
 @app.post('/user',status_code=status.HTTP_201_CREATED)
 def createUser(requestBlog:schemas.User, db: Session= Depends(get_db)):
+    hashedPassword= Hash.bcrypt(requestBlog.password)
     user=models.User(name=requestBlog.name,
                      email=requestBlog.email,
-                     password=requestBlog.password)
+                     password=hashedPassword)
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
-@app.get('/user',status_code=status.HTTP_200_OK,response_model=List[schemas.User])
+@app.get('/user',status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser])
 def getUser(db: Session= Depends(get_db)):
     user=db.query(models.User).all()
     return user
