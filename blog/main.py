@@ -10,11 +10,11 @@ app=FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
-@app.get('/')
+@app.get('/',tags=["Home"])
 def ping():
     return  "Pong"
 
-@app.post('/blog',status_code=status.HTTP_201_CREATED)
+@app.post('/blog',status_code=status.HTTP_201_CREATED,tags=["BLogs"])
 def createBlog(requestBlog:schemas.Blog, db: Session= Depends(get_db)):
     blog=models.Blog(title=requestBlog.title,
          author=requestBlog.author,
@@ -24,12 +24,13 @@ def createBlog(requestBlog:schemas.Blog, db: Session= Depends(get_db)):
     db.refresh(blog)
     return blog
 
-@app.get('/blog',status_code=status.HTTP_200_OK,response_model=List[schemas.ShowBlog])
+@app.get('/blog',status_code=status.HTTP_200_OK,
+         response_model=List[schemas.ShowBlog],tags=["BLogs"])
 def getAllBlogs(db: Session= Depends(get_db)):
     blogs=db.query(models.Blog).all()
     return blogs
 
-@app.get('/blog/{id}',status_code=status.HTTP_200_OK)
+@app.get('/blog/{id}',status_code=status.HTTP_200_OK,tags=["BLogs"])
 def getBlogById(id:int, db: Session= Depends(get_db)):
     blog=db.query(models.Blog).filter(models.Blog.id==id).first()
     if not blog:
@@ -37,8 +38,9 @@ def getBlogById(id:int, db: Session= Depends(get_db)):
                             detail=f"blog with id {id} does not exists")
     return blog
 
-@app.put('/blog/{id}')
-def updateBlogById(id:int,requestBlog:schemas.Blog,db: Session= Depends(get_db)):
+@app.put('/blog/{id}',tags=["BLogs"])
+def updateBlogById(id:int,requestBlog:schemas.Blog,
+                   db: Session= Depends(get_db)):
     blog=db.query(models.Blog).filter(models.Blog.id==id)
     if not blog.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +50,7 @@ def updateBlogById(id:int,requestBlog:schemas.Blog,db: Session= Depends(get_db))
     db.refresh(blog)
     return f"Successfully Updated the blog with id {id}"
 
-@app.delete('/blog/{id}')
+@app.delete('/blog/{id}',tags=["BLogs"])
 def deleteBlogById(id:int,db: Session= Depends(get_db)):
     blog=db.query(models.Blog).filter(models.Blog.id==id)
     if not blog.first():
@@ -60,7 +62,7 @@ def deleteBlogById(id:int,db: Session= Depends(get_db)):
     return f"Successfully deleted the blog with id {id}"
 
 
-@app.post('/user',status_code=status.HTTP_201_CREATED)
+@app.post('/user',status_code=status.HTTP_201_CREATED, tags=["Users"])
 def createUser(requestBlog:schemas.User, db: Session= Depends(get_db)):
     hashedPassword= Hash.bcrypt(requestBlog.password)
     user=models.User(name=requestBlog.name,
@@ -71,7 +73,16 @@ def createUser(requestBlog:schemas.User, db: Session= Depends(get_db)):
     db.refresh(user)
     return user
 
-@app.get('/user',status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser])
+@app.get('/user',status_code=status.HTTP_200_OK,
+         response_model=List[schemas.ShowUser], tags=["Users"])
 def getUser(db: Session= Depends(get_db)):
     user=db.query(models.User).all()
+    return user
+
+@app.get('/user/{id}',response_model=schemas.ShowUser, tags=["Users"])
+def getUserById(id:int, db: Session= Depends(get_db)):
+    user=db.query(models.User).filter(models.User.id==id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with id {id} does not exists")
     return user

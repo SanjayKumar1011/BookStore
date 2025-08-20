@@ -1,4 +1,5 @@
 from pydantic import BaseModel,Field
+from typing import List
 
 class Blog(BaseModel):
     title: str= Field(...,min_length=2,max_length=10)
